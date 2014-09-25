@@ -44,7 +44,9 @@ function stalker() {
 
   return function (data, callback) {
     var robot = data.robot
-      , newClosestRobotId = null;
+      , newClosestRobotId = null
+      , maxVelocity = 0.005
+      , increase = 0.00001;
 
     var message = {
       acceleration: { x: 0, y: 0 },
@@ -60,11 +62,22 @@ function stalker() {
     closestRobot = data.status.robots[closestRobotId];
 
     var deltas = getDeltas(closestRobot.position, robot.position);
-    var distance = getDistance(closestRobot.position, robot.position);
+    //var distance = getDistance(closestRobot.position, robot.position);
+    var accelerationX = deltas.x * increase;
+    var accelerationY = deltas.y * increase;
 
     // Accelerate toward the closest robot as quickly as possible.
-    message.acceleration.x -= deltas.x / distance * robot.maxAcceleration;
-    message.acceleration.y -= deltas.y / distance * robot.maxAcceleration;
+    if (robot.velocity.x > maxVelocity || robot.velocity.x < -maxVelocity) {
+      message.acceleration.x = 0;
+    } else {
+      message.acceleration.x -= accelerationX;
+    }
+
+    if (robot.velocity.y > maxVelocity || robot.velocity.y < -maxVelocity) {
+      message.acceleration.y = 0;
+    } else {
+      message.acceleration.y -= accelerationY;
+    }
 
     // If I have reloaded, fire at the enemy.
     if (robot.timeSinceLastShot >= robot.rearmDuration) {
@@ -73,22 +86,22 @@ function stalker() {
 
     // If I'm getting too close to the western boundary. Move away from it.
     if (robot.position.x < sideTolerance) {
-      message.acceleration.x += robot.maxAcceleration * 1000;
+      message.acceleration.x = robot.maxAcceleration;
     }
 
     // If I'm getting too close to the eastern boundary. Move away from it.
     if (robot.position.x > data.status.field.width - sideTolerance) {
-      message.acceleration.x -= robot.maxAcceleration * 1000;
+      message.acceleration.x = -robot.maxAcceleration;
     }
 
     // If I'm getting too close to the northern boundary. Move away from it.
     if (robot.position.y < sideTolerance) {
-      message.acceleration.y += robot.maxAcceleration * 1000;
+      message.acceleration.y = robot.maxAcceleration;
     }
 
     // If I'm getting too close to the southern boundary. Move away from it.
     if (robot.position.y > data.status.field.height - sideTolerance) {
-      message.acceleration.y -= robot.maxAcceleration * 1000;
+      message.acceleration.y = -robot.maxAcceleration;
     }
 
     callback(null, message, false);
