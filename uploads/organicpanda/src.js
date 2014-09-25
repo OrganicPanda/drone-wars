@@ -53,55 +53,57 @@ function stalker() {
       token: data.token
     };
 
-    newClosestRobotId = getClosest(data.status.robots, robot);
+    if (Object.keys(data.status.robots).length > 1) {
+      newClosestRobotId = getClosest(data.status.robots, robot);
 
-    if (closestRobotId !== newClosestRobotId) {
-      closestRobotId = newClosestRobotId;
-    }
+      if (closestRobotId !== newClosestRobotId) {
+        closestRobotId = newClosestRobotId;
+      }
 
-    closestRobot = data.status.robots[closestRobotId];
+      closestRobot = data.status.robots[closestRobotId];
 
-    var deltas = getDeltas(closestRobot.position, robot.position);
-    //var distance = getDistance(closestRobot.position, robot.position);
-    var accelerationX = deltas.x * increase;
-    var accelerationY = deltas.y * increase;
+      var deltas = getDeltas(closestRobot.position, robot.position);
+      //var distance = getDistance(closestRobot.position, robot.position);
+      var accelerationX = deltas.x * increase;
+      var accelerationY = deltas.y * increase;
 
-    // Accelerate toward the closest robot as quickly as possible.
-    if (robot.velocity.x > maxVelocity || robot.velocity.x < -maxVelocity) {
-      message.acceleration.x = 0;
-    } else {
-      message.acceleration.x -= accelerationX;
-    }
+      // Accelerate toward the closest robot as quickly as possible.
+      if (robot.velocity.x > maxVelocity || robot.velocity.x < -maxVelocity) {
+        message.acceleration.x = 0;
+      } else {
+        message.acceleration.x -= accelerationX;
+      }
 
-    if (robot.velocity.y > maxVelocity || robot.velocity.y < -maxVelocity) {
-      message.acceleration.y = 0;
-    } else {
-      message.acceleration.y -= accelerationY;
-    }
+      if (robot.velocity.y > maxVelocity || robot.velocity.y < -maxVelocity) {
+        message.acceleration.y = 0;
+      } else {
+        message.acceleration.y -= accelerationY;
+      }
 
-    // If I have reloaded, fire at the enemy.
-    if (robot.timeSinceLastShot >= robot.rearmDuration) {
-      message.fire = { x: closestRobot.position.x, y: closestRobot.position.y };
-    }
+      // If I have reloaded, fire at the enemy.
+      if (robot.timeSinceLastShot >= robot.rearmDuration) {
+        message.fire = { x: closestRobot.position.x, y: closestRobot.position.y };
+      }
 
-    // If I'm getting too close to the western boundary. Move away from it.
-    if (robot.position.x < sideTolerance) {
-      message.acceleration.x = robot.maxAcceleration;
-    }
+      // If I'm getting too close to the western boundary. Move away from it.
+      if (robot.position.x < sideTolerance) {
+        message.acceleration.x = robot.maxAcceleration;
+      }
 
-    // If I'm getting too close to the eastern boundary. Move away from it.
-    if (robot.position.x > data.status.field.width - sideTolerance) {
-      message.acceleration.x = -robot.maxAcceleration;
-    }
+      // If I'm getting too close to the eastern boundary. Move away from it.
+      if (robot.position.x > data.status.field.width - sideTolerance) {
+        message.acceleration.x = -robot.maxAcceleration;
+      }
 
-    // If I'm getting too close to the northern boundary. Move away from it.
-    if (robot.position.y < sideTolerance) {
-      message.acceleration.y = robot.maxAcceleration;
-    }
+      // If I'm getting too close to the northern boundary. Move away from it.
+      if (robot.position.y < sideTolerance) {
+        message.acceleration.y = robot.maxAcceleration;
+      }
 
-    // If I'm getting too close to the southern boundary. Move away from it.
-    if (robot.position.y > data.status.field.height - sideTolerance) {
-      message.acceleration.y = -robot.maxAcceleration;
+      // If I'm getting too close to the southern boundary. Move away from it.
+      if (robot.position.y > data.status.field.height - sideTolerance) {
+        message.acceleration.y = -robot.maxAcceleration;
+      }
     }
 
     callback(null, message, false);
